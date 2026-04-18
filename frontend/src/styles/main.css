@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global CSS Variables - Red Theme */
+:root {
+  --primary-red: #dc2626;
+  --primary-red-dark: #b91c1c;
+  --primary-red-light: #f87171;
+  --primary-red-50: #fef2f2;
+  --primary-red-100: #fee2e2;
+  --primary-red-600: #dc2626;
+  --primary-red-700: #b91c1c;
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+}
+
+/* Global full-width reset */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Custom component styles for red theme */
+@layer components {
+  .blood-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background-color: var(--primary-red-50);
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  
+  .btn-primary {
+    background-color: var(--primary-red);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-red-dark);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-0.125rem);
+  }
+  
+  .btn-secondary {
+    background-color: white;
+    color: var(--primary-red);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid var(--primary-red);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--gray-50);
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--gray-200);
+    padding: 1.5rem;
+  }
+}
+
+/* Base styles */
+@layer base {
+  * {
+    border-color: var(--gray-200);
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  body {
+    background-color: var(--gray-50);
+    color: var(--gray-900);
+  }
+  
+  /* Global red theme overrides */
+  .header {
+    background-color: var(--white) !important;
+    width: 100% !important;
+  }
+  
+  .hero-section {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%) !important;
+    width: 100vw !important;
+  }
+  
+  .statistics-section {
+    background: var(--primary-red) !important;
+    width: 100vw !important;
+  }
+  
+  .cta-section {
+    background: var(--primary-red) !important;
+    width: 100vw !important;
+  }
+  
+  .search-button {
+    background-color: var(--primary-red) !important;
+  }
+  
+  .search-button:hover {
+    background-color: var(--primary-red-dark) !important;
+  }
+  
+  .submit-button {
+    background-color: var(--primary-red) !important;
+  }
+  
+  .submit-button:hover {
+    background-color: var(--primary-red-dark) !important;
+  }
+}
