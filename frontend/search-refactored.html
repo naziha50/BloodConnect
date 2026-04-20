@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Blood Donors - BloodConnect</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --primary-red: #dc2626;
+      --primary-red-dark: #991b1b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --text-light: #6b7280;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: var(--gray-900);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--gray-900);
+    }
+
+    .logo-icon {
+      font-size: 1.75rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-red);
+      margin: 0;
+    }
+
+    .navigation {
+      display: flex;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--gray-600);
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--primary-red);
+    }
+
+    .login-button {
+      background: var(--primary-red);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+    }
+
+    .login-button:hover {
+      background: var(--primary-red-dark);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .search-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.75rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+    }
+
+    .search-title {
+      font-size: 1.75rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      color: var(--gray-900);
+    }
+
+    .search-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      padding: 0.75rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .search-button {
+      background: var(--primary-red);
+      color: white;
+      border: none;
+      padding: 0.875rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .search-button:hover:not(:disabled) {
+      background: var(--primary-red-dark);
+    }
+
+    .search-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Map Section */
+    .map-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.75rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+      display: none;
+    }
+
+    .map-section.active {
+      display: block;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Results Section */
+    .results-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.75rem;
+      box-shadow: var(--shadow-lg);
+      display: none;
+    }
+
+    .results-section.active {
+      display: block;
+    }
+
+    .results-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .results-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+
+    .results-subtitle {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    .donors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .donor-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .donor-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .donor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .donor-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    .blood-badge {
+      background: var(--primary-red);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.4rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .donor-info {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .donor-info strong {
+      color: var(--gray-800);
+      font-weight: 600;
+    }
+
+    .donor-footer {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .distance {
+      flex: 1;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .contact-button {
+      padding: 0.5rem 1rem;
+      background: var(--primary-red);
+      color: white;
+      border: none;
+      border-radius: 0.4rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s ease;
+    }
+
+    .contact-button:hover {
+      background: var(--primary-red-dark);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state-text {
+      color: var(--text-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-inner {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .navigation {
+        gap: 1rem;
+      }
+
+      .search-form {
+        grid-template-columns: 1fr;
+      }
+
+      .search-button {
+        align-self: auto;
+        width: 100%;
+      }
+
+      #map {
+        height: 300px;
+      }
+
+      .donors-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-inner">
+          <a href="index-refactored.html" class="logo-container">
+            <div class="logo-icon">🩸</div>
+            <h1 class="logo">BloodConnect</h1>
+          </a>
+
+          <nav class="navigation">
+            <a href="index-refactored.html" class="nav-link">Home</a>
+            <a href="search-refactored.html" class="nav-link active">Find Donor</a>
+            <a href="register-refactored.html" class="nav-link">Register</a>
+          </nav>
+
+          <a href="login-refactored.html" class="login-button">
+            <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Login
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Search Section -->
+      <div class="search-section">
+        <h2 class="search-title">🩸 Find Blood Donors</h2>
+        
+        <form action="/search" method="GET" id="search-form">
+          <div class="search-form">
+            <div class="form-group">
+              <label for="blood_group">Blood Group *</label>
+              <select id="blood_group" name="blood_group" required>
+                <option value="">Select blood group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="location">Location or City *</label>
+              <input 
+                type="text" 
+                id="location" 
+                name="location" 
+                placeholder="Enter city or address" 
+                required 
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="radius_km">Search Radius (km)</label>
+              <input 
+                type="number" 
+                id="radius_km" 
+                name="radius_km" 
+                value="50" 
+                min="1" 
+                max="100" 
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="search-button">
+            🔍 Search Donors
+          </button>
+        </form>
+      </div>
+
+      <!-- Map Section -->
+      <div class="map-section" id="map-section">
+        <h3 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: bold;">Donor Locations</h3>
+        <div id="map"></div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="results-section">
+        <div class="results-header">
+          <h3 class="results-title">
+            Found <span id="donor-count">0</span> Donors
+          </h3>
+          <p class="results-subtitle" id="search-criteria"></p>
+        </div>
+
+        <div id="donors-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p class="empty-state-title">No donors found</p>
+            <p class="empty-state-text">Try widening the search radius or trying a different location</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet Map Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="minimal.js"></script>
+
+  <script>
+    let map;
+    let markersLayer;
+
+    // Initialize search form
+    document.getElementById('search-form')?.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const bloodGroup = document.getElementById('blood_group').value;
+      const location = document.getElementById('location').value;
+      const radiusKm = document.getElementById('radius_km').value;
+
+      if (!bloodGroup || !location) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      try {
+        // Get coordinates from location name
+        const coordsResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+        );
+        const coordsData = await coordsResponse.json();
+
+        if (!coordsData.length) {
+          alert('Location not found. Please try another location.');
+          return;
+        }
+
+        const coords = {
+          lat: parseFloat(coordsData[0].lat),
+          lng: parseFloat(coordsData[0].lon)
+        };
+
+        // Fetch donors from backend
+        const donorsResponse = await fetch(
+          `/search?blood_group=${bloodGroup}&lat=${coords.lat}&lng=${coords.lng}&radius_km=${radiusKm}`
+        );
+
+        if (!donorsResponse.ok) {
+          throw new Error('Search failed');
+        }
+
+        const donors = await donorsResponse.json();
+        displayResults(donors, bloodGroup, location, radiusKm, coords);
+      } catch (error) {
+        console.error('Search error:', error);
+        alert('Error performing search. Please try again.');
+      }
+    });
+
+    function displayResults(donors, bloodGroup, location, radiusKm, coords) {
+      // Update count
+      document.getElementById('donor-count').textContent = donors.length;
+      document.getElementById('search-criteria').textContent = 
+        `Searching for ${bloodGroup} in ${location} (${radiusKm}km radius)`;
+
+      // Show sections
+      document.getElementById('map-section').classList.add('active');
+      document.getElementById('results-section').classList.add('active');
+
+      // Initialize map if needed
+      if (!map) {
+        map = L.map('map').setView([coords.lat, coords.lng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+        markersLayer = L.layerGroup().addTo(map);
+      } else {
+        map.setView([coords.lat, coords.lng], 12);
+        markersLayer.clearLayers();
+      }
+
+      // Add search center marker
+      L.circleMarker([coords.lat, coords.lng], {
+        radius: 8,
+        fillColor: '#dc2626',
+        color: '#dc2626',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.8
+      }).addTo(markersLayer).bindPopup('Search Center');
+
+      // Render donor cards and map markers
+      const container = document.getElementById('donors-container');
+      if (donors.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">😕</div>
+            <p class="empty-state-title">No donors found</p>
+            <p class="empty-state-text">Try widening the search radius or searching for a different blood type</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="donors-grid">
+            ${donors.map(donor => `
+              <div class="donor-card">
+                <div class="donor-header">
+                  <h4 class="donor-name">${escapeHtml(donor.name)}</h4>
+                  <span class="blood-badge">${escapeHtml(donor.blood_group)}</span>
+                </div>
+                <div class="donor-info">
+                  <strong>Phone:</strong> ${escapeHtml(donor.phone)}
+                </div>
+                ${donor.email ? `
+                  <div class="donor-info">
+                    <strong>Email:</strong> ${escapeHtml(donor.email)}
+                  </div>
+                ` : ''}
+                ${donor.address ? `
+                  <div class="donor-info">
+                    <strong>Address:</strong> ${escapeHtml(donor.address)}
+                  </div>
+                ` : ''}
+                <div class="donor-footer">
+                  <div class="distance">
+                    📍 ${(donor.distance_km || 0).toFixed(1)}km away
+                  </div>
+                  <a href="tel:${donor.phone}" class="contact-button">
+                    📞 Call
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        // Add markers to map
+        donors.forEach(donor => {
+          L.circleMarker([donor.lat, donor.lng], {
+            radius: 6,
+            fillColor: '#22c55e',
+            color: '#16a34a',
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.8
+          }).addTo(markersLayer).bindPopup(`
+            <strong>${escapeHtml(donor.name)}</strong><br>
+            ${escapeHtml(donor.blood_group)}<br>
+            ${escapeHtml(donor.phone)}
+          `);
+        });
+
+        // Fit map to all markers
+        const group = new L.featureGroup([
+          L.circleMarker([coords.lat, coords.lng], {radius: 0}),
+          ...donors.map(d => L.circleMarker([d.lat, d.lng], {radius: 0}))
+        ]);
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

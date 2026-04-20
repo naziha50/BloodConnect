@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BloodConnect - Save Lives by Donating Blood</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --primary-red: #dc2626;
+      --primary-red-dark: #991b1b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --text-light: #6b7280;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: var(--gray-900);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--gray-900);
+    }
+
+    .logo-icon {
+      font-size: 1.75rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-red);
+      margin: 0;
+    }
+
+    /* Navigation */
+    .navigation {
+      display: flex;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--gray-600);
+      font-weight: 500;
+      transition: color 0.3s ease;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 1rem;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--primary-red);
+    }
+
+    /* Auth Button */
+    .login-button {
+      background: var(--primary-red);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+    }
+
+    .login-button:hover {
+      background: var(--primary-red-dark);
+    }
+
+    .login-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.875rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary-red);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: white;
+      color: var(--primary-red);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 4rem 2rem;
+      background: white;
+    }
+
+    .features-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      text-align: center;
+      background: var(--gray-50);
+      border-radius: 0.75rem;
+      border: 1px solid var(--gray-200);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    /* How It Works */
+    .how-it-works {
+      padding: 4rem 2rem;
+      background: var(--gray-50);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      color: var(--gray-900);
+    }
+
+    .steps {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      background: var(--primary-red);
+      color: white;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .step h4 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--gray-900);
+    }
+
+    .step p {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      background: var(--primary-red);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--gray-900);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .footer p {
+      opacity: 0.8;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-inner {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .navigation {
+        gap: 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .hero-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-inner">
+          <a href="index-refactored.html" class="logo-container">
+            <div class="logo-icon">🩸</div>
+            <h1 class="logo">BloodConnect</h1>
+          </a>
+
+          <!-- Navigation Menu -->
+          <nav class="navigation">
+            <a href="index-refactored.html" class="nav-link active">Home</a>
+            <a href="search-refactored.html" class="nav-link">Find Donor</a>
+            <a href="register-refactored.html" class="nav-link">Register</a>
+          </nav>
+
+          <!-- Auth Button -->
+          <a href="login-refactored.html" class="login-button">
+            <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Login
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Save Lives with Your Blood Donation</h1>
+        <p>BloodConnect connects blood donors with those in need. Register as a donor or find blood donors near you in seconds.</p>
+        <div class="hero-actions">
+          <a href="register-refactored.html" class="btn btn-primary">Become a Donor</a>
+          <a href="search-refactored.html" class="btn btn-secondary">Find Donors</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Easy Registration</h3>
+          <p>Sign up as a blood donor in just a few minutes. Share your location and blood type.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📍</div>
+          <h3>Location-Based Search</h3>
+          <p>Find blood donors near you instantly with our advanced geolocation feature.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Fast Contact</h3>
+          <p>Call or email donors directly. Quick response times can save lives.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Private</h3>
+          <p>Your data is protected. Share only what you're comfortable sharing.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💓</div>
+          <h3>Save Lives</h3>
+          <p>Your donation directly helps people in emergency situations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌍</div>
+          <h3>Global Community</h3>
+          <p>Join thousands of donors making a difference in their communities.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+      <h2 class="section-title">How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h4>Register</h4>
+          <p>Create an account and provide your blood type and location information.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h4>Get Discovered</h4>
+          <p>Your profile becomes visible to people searching for your blood type.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h4>Help Others</h4>
+          <p>Be contacted directly when your blood type is needed in your area.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <h4>Make a Difference</h4>
+          <p>Save lives with your generous blood donation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <h2>Ready to Save Lives?</h2>
+      <p>Join our community of blood donors today</p>
+      <a href="register-refactored.html" class="btn btn-primary">Register Now</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2024 BloodConnect. All rights reserved. | Saving lives, one donation at a time.</p>
+    </footer>
+  </div>
+
+  <script src="minimal.js"></script>
+</body>
+</html>
