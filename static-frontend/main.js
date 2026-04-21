@@ -41,50 +41,50 @@ function isFindDonorPage() {
 const mockDonors = [
   {
     id: 1,
-    name: "Sarah Johnson",
+    name: "Rahim Ahmed",
     blood_group: "O+",
-    phone: "+1 (555) 123-4567",
-    email: "sarah.j@example.com",
-    address: "123 Oak Street, Springfield",
+    phone: "+8801712345678",
+    email: "rahim@example.com",
+    address: "Dhanmondi, Dhaka",
     last_donation_date: "2023-12-01",
-    lat: 40.7128,
-    lng: -74.0060,
+    lat: 23.7465,
+    lng: 90.3760,
     availability: "available"
   },
   {
     id: 2,
-    name: "Michael Chen",
+    name: "Nusrat Jahan",
     blood_group: "A-",
-    phone: "+1 (555) 234-5678",
-    email: "michael.c@example.com",
-    address: "456 Pine Avenue, Springfield",
+    phone: "+8801812345678",
+    email: "nusrat@example.com",
+    address: "Gulshan, Dhaka",
     last_donation_date: "2023-11-15",
-    lat: 40.7589,
-    lng: -73.9851,
+    lat: 23.7925,
+    lng: 90.4078,
     availability: "available"
   },
   {
     id: 3,
-    name: "Emily Rodriguez",
+    name: "Tanvir Hasan",
     blood_group: "B+",
-    phone: "+1 (555) 345-6789",
-    email: "emily.r@example.com",
-    address: "789 Elm Drive, Springfield",
+    phone: "+8801912345678",
+    email: "tanvir@example.com",
+    address: "Mirpur, Dhaka",
     last_donation_date: "2023-10-20",
-    lat: 40.7505,
-    lng: -73.9934,
+    lat: 23.8223,
+    lng: 90.3654,
     availability: "unavailable"
   },
   {
     id: 4,
-    name: "David Kim",
+    name: "Farzana Akter",
     blood_group: "AB+",
-    phone: "+1 (555) 456-7890",
-    email: "david.k@example.com",
-    address: "321 Maple Lane, Springfield",
+    phone: "+8801612345678",
+    email: "farzana@example.com",
+    address: "Uttara, Dhaka",
     last_donation_date: "2023-09-10",
-    lat: 40.7282,
-    lng: -73.7949,
+    lat: 23.8759,
+    lng: 90.3795,
     availability: "available"
   }
 ];
@@ -394,9 +394,9 @@ function checkAuth() {
         // Mock user data
         document.getElementById('profile-name').textContent = 'Demo User';
         document.getElementById('profile-email').textContent = 'demo@bloodconnect.com';
-        document.getElementById('profile-phone').textContent = '+1 (555) 123-4567';
+        document.getElementById('profile-phone').textContent = '+18801712332230';
         document.getElementById('profile-blood-group').textContent = 'O+';
-        document.getElementById('profile-address').textContent = '123 Demo Street, Demo City';
+        document.getElementById('profile-address').textContent = 'Banani, Dhaka';
       }
     }
   } else {
@@ -438,9 +438,9 @@ function createMap() {
   mapElement.style.display = 'block';
   mapElement.style.height = '24rem';
 
-  // Center coordinates (New York)
-  const centerLat = 40.7128;
-  const centerLng = -74.0060;
+  // Center coordinates (Dhaka)
+  const centerLat = 23.8103;
+  const centerLng = 90.4125;
 
   // Initialize Leaflet map
   donorMap = L.map('donor-map', {
