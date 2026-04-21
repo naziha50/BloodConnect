@@ -47,8 +47,8 @@ const mockDonors = [
     email: "rahim@example.com",
     address: "Dhanmondi, Dhaka",
     last_donation_date: "2023-12-01",
-    lat: 23.7465,
-    lng: 90.3760,
+    lat: 23.7470499,
+    lng: 90.3655622,
     availability: "available"
   },
   {
@@ -59,8 +59,8 @@ const mockDonors = [
     email: "nusrat@example.com",
     address: "Gulshan, Dhaka",
     last_donation_date: "2023-11-15",
-    lat: 23.7925,
-    lng: 90.4078,
+    lat: 23.7806808,
+    lng: 90.40614,
     availability: "available"
   },
   {
@@ -71,8 +71,8 @@ const mockDonors = [
     email: "tanvir@example.com",
     address: "Mirpur, Dhaka",
     last_donation_date: "2023-10-20",
-    lat: 23.8223,
-    lng: 90.3654,
+    lat: 23.806296,
+    lng: 90.3460622,
     availability: "unavailable"
   },
   {
@@ -83,8 +83,8 @@ const mockDonors = [
     email: "farzana@example.com",
     address: "Uttara, Dhaka",
     last_donation_date: "2023-09-10",
-    lat: 23.8759,
-    lng: 90.3795,
+    lat: 23.8766874,
+    lng: 90.3576884,
     availability: "available"
   }
 ];
@@ -156,14 +156,9 @@ function handleManualLocationSearch() {
   }
 }
 
-function performSearch(bloodGroup, location, radiusKm = '50', availability = '') {
+function performSearch(bloodGroup, radiusKm = '50', availability = '') {
   const resultsContainer = document.getElementById('donor-list');
-  if (!bloodGroup || !location) {
-    showAlert('Please fill in all fields');
-    return;
-  }
 
-  // Update location state
   hasLocation = true;
   updateLocationBanner();
   updateContentGridVisibility();
@@ -180,12 +175,10 @@ function performSearch(bloodGroup, location, radiusKm = '50', availability = '')
     `;
   }
 
-  // Initialize map if not already done
   if (!donorMap && isFindDonorPage()) {
     setTimeout(() => initializeMap(), 100);
   }
 
-  // Simulate API delay
   setTimeout(() => {
     let filteredDonors = mockDonors.filter(donor => {
       const bloodMatch = !bloodGroup || donor.blood_group === bloodGroup;
@@ -194,53 +187,43 @@ function performSearch(bloodGroup, location, radiusKm = '50', availability = '')
     });
 
     renderSearchResults(filteredDonors);
-  }, 1000);
+  }, 500);
 }
 
 function initializeSearchFromQuery() {
   if (!isFindDonorPage()) return;
+
   const params = parseQueryParams();
   const bloodGroup = params.blood_group || '';
-  const location = params.location || '';
   const radiusKm = params.radius_km || '50';
   const availability = params.availability || '';
 
   const bloodGroupInput = document.getElementById('blood-group');
-  const locationInput = document.getElementById('location');
   const radiusSelect = document.getElementById('radius-km');
   const availabilitySelect = document.getElementById('availability');
 
   if (bloodGroupInput) bloodGroupInput.value = bloodGroup;
-  if (locationInput) locationInput.value = location;
   if (radiusSelect) radiusSelect.value = radiusKm;
   if (availabilitySelect) availabilitySelect.value = availability;
 
-  if (bloodGroup && location) {
-    // Update location state
-    hasLocation = true;
-    updateLocationBanner();
-    updateContentGridVisibility();
-    performSearch(bloodGroup, location, radiusKm, availability);
-  } else {
-    // Initialize UI state
-    updateLocationBanner();
-    updateContentGridVisibility();
+  hasLocation = true;
+  updateLocationBanner();
+  updateContentGridVisibility();
+
+  if (bloodGroup || availability || radiusKm) {
+    performSearch(bloodGroup, radiusKm, availability);
   }
 }
 
 function createDonorCard(donor) {
-  const availability = donor.availability !== false && donor.availability !== 'unavailable';
-  const lastDonation = donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'No previous donation';
+  const availability = donor.availability === 'available';
+  const lastDonation = donor.last_donation_date
+    ? new Date(donor.last_donation_date).toLocaleDateString()
+    : 'No previous donation';
 
   return `
     <div class="donor-card">
-      <div class="card-top">
-        <div class="donor-avatar">
-          <svg viewBox="0 0 24 24" fill="#dc2626" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-          </svg>
-        </div>
-
+      <div class="card-top no-avatar">
         <div class="donor-info">
           <h3 class="donor-name">${donor.name}</h3>
           <div class="donor-location-row">
@@ -254,7 +237,7 @@ function createDonorCard(donor) {
         </div>
 
         <div class="donor-badges">
-          <span class="blood-type-badge">${donor.blood_group}</span>
+          <span class="blood-type-badge">${donor.blood_group || 'N/A'}</span>
           <span class="avail-badge ${availability ? 'avail-yes' : 'avail-no'}">
             ${availability ? 'Available' : 'Not Available'}
           </span>
@@ -263,18 +246,8 @@ function createDonorCard(donor) {
 
       ${availability ? `
         <div class="card-actions">
-          <a href="tel:${donor.phone}" class="btn-call">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            Call
-          </a>
-          <a href="mailto:${donor.email || ''}" class="btn-message">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            Message
-          </a>
+          <a href="tel:${donor.phone}" class="btn-call">Call</a>
+          <a href="mailto:${donor.email || ''}" class="btn-message">Message</a>
         </div>
       ` : ''}
     </div>
@@ -341,22 +314,24 @@ function handleLogout() {
 
 function handleSearch(event) {
   if (event) event.preventDefault();
+
   const bloodGroupInput = document.getElementById('blood-group');
-  const locationInput = document.getElementById('location');
   const radiusSelect = document.getElementById('radius-km');
   const availabilitySelect = document.getElementById('availability');
 
   const bloodGroup = bloodGroupInput ? bloodGroupInput.value : '';
-  const location = locationInput ? locationInput.value : '';
   const radiusKm = radiusSelect ? radiusSelect.value : '50';
   const availability = availabilitySelect ? availabilitySelect.value : '';
 
-  if (!bloodGroup || !location) {
-    showAlert('Please fill in all fields');
-    return;
-  }
-
   if (!isFindDonorPage()) {
+    const locationInput = document.getElementById('location');
+    const location = locationInput ? locationInput.value.trim() : '';
+
+    if (!bloodGroup || !location) {
+      showAlert('Please fill in all fields');
+      return;
+    }
+
     window.location.href = buildFindDonorUrl({
       blood_group: bloodGroup,
       location,
@@ -366,7 +341,7 @@ function handleSearch(event) {
     return;
   }
 
-  performSearch(bloodGroup, location, radiusKm, availability);
+  performSearch(bloodGroup, radiusKm, availability);
 }
 
 function loadNearbyDonors() {
