@@ -102,16 +102,14 @@ function renderSearchResults(donors) {
   const resultsContainer = document.getElementById('donor-list');
   const countEl = document.getElementById('results-count');
   const mapSubtitle = document.getElementById('map-subtitle');
+  
   if (!resultsContainer || !countEl) return;
 
   countEl.textContent = `${donors.length} result${donors.length === 1 ? '' : 's'}`;
-  const mapSubtitle = document.getElementById('map-subtitle');
   if (mapSubtitle) {
     mapSubtitle.textContent = `${donors.length} donors found in your area`;
   }
-  if (mapSubtitle) {
-    mapSubtitle.textContent = `${donors.length} donors found in your area`;
-  }
+
   if (donors.length === 0) {
     resultsContainer.innerHTML = `
       <div class="state-box">
@@ -173,9 +171,18 @@ function performSearch(bloodGroup, location, radiusKm = '50', availability = '')
   if (resultsContainer) {
     resultsContainer.innerHTML = `
       <div class="state-box">
+        <svg class="spin-icon large" fill="none" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="#dc2626" stroke-width="4" style="opacity:0.25"></circle>
+          <path fill="#dc2626" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
         <p class="state-title">Searching for donors...</p>
       </div>
     `;
+  }
+
+  // Initialize map if not already done
+  if (!donorMap && isFindDonorPage()) {
+    setTimeout(() => initializeMap(), 100);
   }
 
   // Simulate API delay
@@ -427,6 +434,10 @@ function createMap() {
   const mapElement = document.getElementById('donor-map');
   if (!mapElement || donorMap) return;
 
+  // Ensure element is visible
+  mapElement.style.display = 'block';
+  mapElement.style.height = '24rem';
+
   // Center coordinates (New York)
   const centerLat = 40.7128;
   const centerLng = -74.0060;
@@ -435,7 +446,8 @@ function createMap() {
   donorMap = L.map('donor-map', {
     center: [centerLat, centerLng],
     zoom: 13,
-    scrollWheelZoom: true
+    scrollWheelZoom: true,
+    dragging: true
   });
 
   // Add OpenStreetMap tile layer
