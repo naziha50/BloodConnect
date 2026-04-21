@@ -160,7 +160,8 @@ function handleManualLocationSearch() {
   }
 }
 
-function performSearch(bloodGroup, radiusKm = '50', availability = '') {
+// Main search function
+async function performSearch(bloodGroup, radiusKm = '50', availability = '') {
   const resultsContainer = document.getElementById('donor-list');
 
   hasLocation = true;
@@ -170,10 +171,6 @@ function performSearch(bloodGroup, radiusKm = '50', availability = '') {
   if (resultsContainer) {
     resultsContainer.innerHTML = `
       <div class="state-box">
-        <svg class="spin-icon large" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="#dc2626" stroke-width="4" style="opacity:0.25"></circle>
-          <path fill="#dc2626" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
         <p class="state-title">Searching for donors...</p>
       </div>
     `;
@@ -183,23 +180,27 @@ function performSearch(bloodGroup, radiusKm = '50', availability = '') {
     setTimeout(() => initializeMap(), 100);
   }
 
-  setTimeout(() => {
-    let filteredDonors = mockDonors.filter(donor => {
-      const bloodMatch = !bloodGroup || donor.blood_group === bloodGroup;
-      const availabilityMatch = !availability || donor.availability === availability;
+  try {
+    const params = new URLSearchParams();
+    if (bloodGroup)   params.set('blood_group',  bloodGroup);
+    if (availability) params.set('availability', availability);
 
-      const donorDistance =
-        typeof donor.lat === 'number' && typeof donor.lng === 'number'
-          ? calculateDistanceKm(DHAKA_CENTER.lat, DHAKA_CENTER.lng, donor.lat, donor.lng)
-          : Infinity;
+    const res  = await fetch(`/api/donors?${params.toString()}`);
+    const donors = await res.json();
 
-      const distanceMatch = !radiusKm || donorDistance <= Number(radiusKm);
+    renderSearchResults(donors);
+    updateMapMarkers(donors);  // <-- updates map with real results
 
-      return bloodMatch && availabilityMatch && distanceMatch;
-    });
-
-    renderSearchResults(filteredDonors);
-  }, 500);
+  } catch (err) {
+    if (resultsContainer) {
+      resultsContainer.innerHTML = `
+        <div class="state-box">
+          <p class="state-title">Failed to load donors</p>
+          <p class="state-sub">Make sure the server is running.</p>
+        </div>
+      `;
+    }
+  }
 }
 
 function initializeSearchFromQuery() {
@@ -246,7 +247,7 @@ function calculateDistanceKm(lat1, lng1, lat2, lng2) {
 }
 
 function createDonorCard(donor) {
-  const availability = donor.availability === 'available';
+  const availability = donor.is_available === true || donor.availability === 'available';
   const lastDonation = donor.last_donation_date
     ? new Date(donor.last_donation_date).toLocaleDateString()
     : 'No previous donation';
@@ -290,55 +291,75 @@ function createDonorCard(donor) {
 }
 
 // Event handlers
-function handleLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
-  const email = document.getElementById('login-email')?.value || document.getElementById('email')?.value;
-  const password = document.getElementById('login-password')?.value || document.getElementById('password')?.value;
+  const email = document.getElementById('login-email')?.value;
+  const password = document.getElementById('login-password')?.value;
 
-  // Mock login - accept demo credentials
-  if (email === 'demo@bloodconnect.com' && password === 'demo123') {
-    setToken('mock-token');
-    showAlert('Login successful!', 'success');
-    setTimeout(() => {
-      window.location.href = 'profile.html';
-    }, 1000);
-  } else {
-    const errorEl = document.getElementById('error-message');
-    if (errorEl) {
-      errorEl.classList.remove('hidden');
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errorEl = document.getElementById('error-message');
+      if (errorEl) errorEl.classList.remove('hidden');
+      return;
     }
-    showAlert('Invalid email or password. Please try again.');
+
+    setToken(data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    window.location.href = 'profile.html';
+
+  } catch (err) {
+    alert('Network error. Is the server running?');
   }
 }
 
-function handleRegister(event) {
+// Registration Handler
+async function handleRegister(event) {
   event.preventDefault();
-  const name = document.getElementById('register-name')?.value || document.getElementById('name')?.value;
-  const email = document.getElementById('register-email')?.value || document.getElementById('email')?.value;
-  const phone = document.getElementById('register-phone')?.value || document.getElementById('phone')?.value;
-  const bloodGroup = document.getElementById('register-blood-group')?.value || document.getElementById('blood-group')?.value;
-  const address = document.getElementById('register-address')?.value || document.getElementById('address')?.value;
-  const password = document.getElementById('register-password')?.value || document.getElementById('password')?.value;
+  const name       = document.getElementById('register-name')?.value;
+  const email      = document.getElementById('register-email')?.value;
+  const phone      = document.getElementById('register-phone')?.value;
+  const blood_group = document.getElementById('register-blood-group')?.value;
+  const address    = document.getElementById('register-address')?.value;
+  const password   = document.getElementById('register-password')?.value;
 
-  if (!name || !email || !phone || !bloodGroup || !address || !password) {
-    showAlert('Please fill in all fields');
+  if (!name || !email || !phone || !blood_group || !address || !password) {
+    alert('Please fill in all fields');
     return;
   }
 
-  // Mock registration
-  setToken('mock-token');
-  localStorage.setItem('user', JSON.stringify({
-    name,
-    email,
-    phone,
-    blood_group: bloodGroup,
-    address
-  }));
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, blood_group, address, password })
+    });
 
-  showAlert('Registration successful!', 'success');
-  setTimeout(() => {
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errorEl = document.getElementById('error-message');
+      if (errorEl) {
+        errorEl.textContent = data.error || 'Registration failed.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    setToken(data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     window.location.href = 'profile.html';
-  }, 1000);
+
+  } catch (err) {
+    alert('Network error. Is the server running?');
+  }
 }
 
 function handleLogout() {
@@ -388,31 +409,42 @@ function loadNearbyDonors() {
   }
 }
 
-function checkAuth() {
+// Authentication check on page load
+async function checkAuth() {
   const token = getToken();
-  if (token) {
-    // For profile page, load user data
-    if (window.location.pathname.includes('profile.html')) {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        document.getElementById('profile-name').textContent = user.name;
-        document.getElementById('profile-email').textContent = user.email;
-        document.getElementById('profile-phone').textContent = user.phone;
-        document.getElementById('profile-blood-group').textContent = user.blood_group;
-        document.getElementById('profile-address').textContent = user.address;
-      } else {
-        // Mock user data
-        document.getElementById('profile-name').textContent = 'Demo User';
-        document.getElementById('profile-email').textContent = 'demo@bloodconnect.com';
-        document.getElementById('profile-phone').textContent = '+18801712332230';
-        document.getElementById('profile-blood-group').textContent = 'O+';
-        document.getElementById('profile-address').textContent = 'Banani, Dhaka';
-      }
-    }
-  } else {
-    // Redirect to login if trying to access profile without auth
+
+  if (!token) {
     if (window.location.pathname.includes('profile.html')) {
       window.location.href = 'login.html';
+    }
+    return;
+  }
+
+  // If on profile page, fetch real user data from the API
+  if (window.location.pathname.includes('profile.html')) {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        // Token expired or invalid
+        removeToken();
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = await res.json();
+
+      // Populate profile fields
+      document.getElementById('profile-name').textContent        = user.name        || '—';
+      document.getElementById('profile-email').textContent       = user.email       || '—';
+      document.getElementById('profile-phone').textContent       = user.phone       || '—';
+      document.getElementById('profile-blood-group').textContent = user.blood_group || '—';
+      document.getElementById('profile-address').textContent     = user.address     || '—';
+
+    } catch (err) {
+      alert('Failed to load profile. Is the server running?');
     }
   }
 }
@@ -534,6 +566,63 @@ function addDonorMarkers() {
   if (subtitleElement) {
     subtitleElement.textContent = `${mockDonors.length} donors found in your area`;
   }
+}
+
+// ADD this new function after addDonorMarkers()
+function updateMapMarkers(donors) {
+  if (!donorMap) return;
+
+  // Clear existing markers
+  mapMarkers.forEach(m => donorMap.removeLayer(m));
+  mapMarkers = [];
+
+  donors.forEach(donor => {
+    // Skip donors without coordinates
+    if (!donor.latitude || !donor.longitude) return;
+
+    const iconColor = donor.is_available ? '#22c55e' : '#f97316';
+
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          background-color: ${iconColor};
+          border: 3px solid white;
+          border-radius: 50%;
+          width: 36px; height: 36px;
+          display: flex; align-items: center; justify-content: center;
+          font-weight: bold; color: white; font-size: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        ">🩸</div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36]
+    });
+
+    const marker = L.marker([donor.latitude, donor.longitude], { icon: customIcon }).addTo(donorMap);
+
+    marker.bindPopup(`
+      <div style="font-size:13px; width:200px;">
+        <strong>${donor.name}</strong><br/>
+        <span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:9999px;font-size:12px;">
+          ${donor.blood_group}
+        </span>
+        <span style="background:${donor.is_available ? '#dcfce7' : '#fee2e2'};
+                     color:${donor.is_available ? '#166534' : '#b91c1c'};
+                     padding:2px 8px;border-radius:9999px;font-size:12px;margin-left:4px;">
+          ${donor.is_available ? 'Available' : 'Not Available'}
+        </span><br/>
+        <small>📍 ${donor.address || 'Unknown'}</small><br/>
+        <small>📞 ${donor.phone || 'N/A'}</small>
+      </div>
+    `);
+
+    mapMarkers.push(marker);
+  });
+
+  const subtitleEl = document.getElementById('map-subtitle');
+  if (subtitleEl) subtitleEl.textContent = `${donors.length} donors found in your area`;
 }
 
 function addCurrentLocationMarker(lat, lng) {
