@@ -33,6 +33,10 @@ function parseQueryParams() {
 
 let hasLocation = false;
 
+const DHAKA_CENTER = {
+  lat: 23.8103,
+  lng: 90.4125
+};
 function isFindDonorPage() {
   return window.location.pathname.includes('find-donor.html');
 }
@@ -183,7 +187,15 @@ function performSearch(bloodGroup, radiusKm = '50', availability = '') {
     let filteredDonors = mockDonors.filter(donor => {
       const bloodMatch = !bloodGroup || donor.blood_group === bloodGroup;
       const availabilityMatch = !availability || donor.availability === availability;
-      return bloodMatch && availabilityMatch;
+
+      const donorDistance =
+        typeof donor.lat === 'number' && typeof donor.lng === 'number'
+          ? calculateDistanceKm(DHAKA_CENTER.lat, DHAKA_CENTER.lng, donor.lat, donor.lng)
+          : Infinity;
+
+      const distanceMatch = !radiusKm || donorDistance <= Number(radiusKm);
+
+      return bloodMatch && availabilityMatch && distanceMatch;
     });
 
     renderSearchResults(filteredDonors);
@@ -214,12 +226,35 @@ function initializeSearchFromQuery() {
     performSearch(bloodGroup, radiusKm, availability);
   }
 }
+function calculateDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => deg * (Math.PI / 180);
+  const earthRadiusKm = 6371;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
+}
 
 function createDonorCard(donor) {
   const availability = donor.availability === 'available';
   const lastDonation = donor.last_donation_date
     ? new Date(donor.last_donation_date).toLocaleDateString()
     : 'No previous donation';
+
+  const distanceKm =
+    typeof donor.lat === 'number' && typeof donor.lng === 'number'
+      ? calculateDistanceKm(DHAKA_CENTER.lat, DHAKA_CENTER.lng, donor.lat, donor.lng).toFixed(1)
+      : null;
 
   return `
     <div class="donor-card">
@@ -231,7 +266,7 @@ function createDonorCard(donor) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            <span>${donor.address || 'Unknown location'} · 2.3 km</span>
+            <span>${donor.address || 'Unknown location'}${distanceKm ? ` · ${distanceKm} km` : ''}</span>
           </div>
           <p class="donor-last-donation">Last donation: ${lastDonation}</p>
         </div>
@@ -414,8 +449,8 @@ function createMap() {
   mapElement.style.height = '24rem';
 
   // Center coordinates (Dhaka)
-  const centerLat = 23.8103;
-  const centerLng = 90.4125;
+  const centerLat = DHAKA_CENTER.lat;
+  const centerLng = DHAKA_CENTER.lng;
 
   // Initialize Leaflet map
   donorMap = L.map('donor-map', {
