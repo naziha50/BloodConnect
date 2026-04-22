@@ -202,7 +202,35 @@ async function performSearch(bloodGroup, radiusKm = '50', availability = '') {
     }
   }
 }
+function updateHeaderUI() {
+  const token = getToken();
+  const loginBtn = document.querySelector('.login-button');
+  if (!loginBtn) return;
 
+  if (token) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const initial = user.name ? user.name.charAt(0).toUpperCase() : '👤';
+
+    loginBtn.outerHTML = `
+      <a href="profile.html" class="login-button" style="gap:8px;">
+        <div style="
+          background-color: #dc2626;
+          color: white;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 13px;
+          flex-shrink: 0;
+        ">${initial}</div>
+        ${user.name ? user.name.split(' ')[0] : 'Profile'}
+      </a>
+    `;
+  }
+}
 function initializeSearchFromQuery() {
   if (!isFindDonorPage()) return;
 
@@ -413,7 +441,11 @@ function loadNearbyDonors() {
 async function checkAuth() {
   const token = getToken();
 
+  // Always update the header first on every page
+  updateHeaderUI();
+
   if (!token) {
+    // Only redirect to login if trying to access profile without auth
     if (window.location.pathname.includes('profile.html')) {
       window.location.href = 'login.html';
     }
@@ -428,13 +460,16 @@ async function checkAuth() {
       });
 
       if (!res.ok) {
-        // Token expired or invalid
         removeToken();
+        localStorage.removeItem('user');
         window.location.href = 'login.html';
         return;
       }
 
       const user = await res.json();
+
+      // Save fresh user data to localStorage
+      localStorage.setItem('user', JSON.stringify(user));
 
       // Populate profile fields
       document.getElementById('profile-name').textContent        = user.name        || '—';
@@ -442,6 +477,9 @@ async function checkAuth() {
       document.getElementById('profile-phone').textContent       = user.phone       || '—';
       document.getElementById('profile-blood-group').textContent = user.blood_group || '—';
       document.getElementById('profile-address').textContent     = user.address     || '—';
+
+      // Also update the header with fresh data
+      updateHeaderUI();
 
     } catch (err) {
       alert('Failed to load profile. Is the server running?');
