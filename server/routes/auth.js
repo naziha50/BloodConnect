@@ -58,5 +58,58 @@ router.get('/me', async (req, res) => {
     res.status(401).json({ error: 'Invalid token' });
   }
 });
+// PUT /api/auth/availability  — toggle availability
+router.put('/availability', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'No token' });
 
+  try {
+    const token   = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { is_available } = req.body;
+    if (typeof is_available !== 'boolean') {
+      return res.status(400).json({ error: 'is_available must be true or false' });
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET is_available = $1 WHERE id = $2 RETURNING id, name, is_available',
+      [is_available, decoded.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// PUT /api/auth/profile  — edit profile fields
+router.put('/profile', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'No token' });
+
+  try {
+    const token   = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { name, email, phone, address } = req.body;
+
+    if (!name || !email || !phone || !address) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const result = await pool.query(
+      `UPDATE users
+       SET name = $1, email = $2, phone = $3, address = $4
+       WHERE id = $5
+       RETURNING id, name, email, phone, blood_group, address, is_available`,
+      [name, email, phone, address, decoded.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'Email already in use' });
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
 module.exports = router;

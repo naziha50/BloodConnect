@@ -485,6 +485,11 @@ async function checkAuth() {
       alert('Failed to load profile. Is the server running?');
     }
   }
+  const badge = document.getElementById('availability-badge');
+  if (badge) {
+    badge.textContent = user.is_available ? 'Available' : 'Unavailable';
+    badge.className   = `avail-badge ${user.is_available ? 'avail-yes' : 'avail-no'}`;
+  }
 }
 
 // Map initialization for find-donor page
@@ -692,7 +697,125 @@ function addCurrentLocationMarker(lat, lng) {
   const userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(donorMap);
   userMarker.bindPopup('Your Location');
 }
+// Show a modal
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
 
+// Hide a modal
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+// Show feedback message inside a modal
+function showModalMessage(elId, message, type = 'success') {
+  const el = document.getElementById(elId);
+  el.textContent = message;
+  el.className = `modal-feedback ${type}`;
+}
+
+// Update availability on the server
+async function updateAvailability(is_available) {
+  const token = getToken();
+  try {
+    const res = await fetch('/api/auth/availability', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ is_available })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Update localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    user.is_available = is_available;
+    localStorage.setItem('user', JSON.stringify(user));
+
+    // Update the badge on the profile page
+    const badge = document.getElementById('availability-badge');
+    if (badge) {
+      badge.textContent   = is_available ? 'Available' : 'Unavailable';
+      badge.className     = `avail-badge ${is_available ? 'avail-yes' : 'avail-no'}`;
+    }
+
+    showModalMessage(
+      'availability-message',
+      `Status updated to ${is_available ? 'Available ✓' : 'Unavailable ✓'}`,
+      'success'
+    );
+
+    // Auto close modal after 1.2 seconds
+    setTimeout(() => closeModal('availability-modal'), 1200);
+
+  } catch (err) {
+    showModalMessage('availability-message', err.message || 'Update failed', 'error');
+  }
+}
+
+// Save edited profile to the server
+async function saveProfileEdits() {
+  const token = getToken();
+  const name    = document.getElementById('edit-name')?.value.trim();
+  const email   = document.getElementById('edit-email')?.value.trim();
+  const phone   = document.getElementById('edit-phone')?.value.trim();
+  const address = document.getElementById('edit-address')?.value.trim();
+
+  if (!name || !email || !phone || !address) {
+    showModalMessage('edit-message', 'All fields are required.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name, email, phone, address })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Update localStorage with fresh data
+    localStorage.setItem('user', JSON.stringify(data));
+
+    // Update the visible profile fields on the page
+    document.getElementById('profile-name').textContent    = data.name;
+    document.getElementById('profile-email').textContent   = data.email;
+    document.getElementById('profile-phone').textContent   = data.phone;
+    document.getElementById('profile-address').textContent = data.address;
+
+    // Update the header avatar initial in case name changed
+    updateHeaderUI();
+
+    showModalMessage('edit-message', 'Profile updated successfully ✓', 'success');
+    setTimeout(() => closeModal('edit-modal'), 1200);
+
+  } catch (err) {
+    showModalMessage('edit-message', err.message || 'Update failed', 'error');
+  }
+}
+
+// Pre-fill edit modal with current profile values
+function openEditModal() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  document.getElementById('edit-name').value    = user.name    || '';
+  document.getElementById('edit-email').value   = user.email   || '';
+  document.getElementById('edit-phone').value   = user.phone   || '';
+  document.getElementById('edit-address').value = user.address || '';
+
+  // Clear any previous messages
+  const msg = document.getElementById('edit-message');
+  if (msg) msg.className = 'modal-feedback hidden';
+
+  openModal('edit-modal');
+}
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
@@ -706,7 +829,47 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchForm) searchForm.addEventListener('submit', handleSearch);
   if (searchButton) searchButton.addEventListener('click', handleSearch);
   if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+  // Availability modal
+  const availabilityBtn = document.querySelector('button.btn-primary');  
+  if (availabilityBtn && availabilityBtn.textContent.includes('Availability')) {
+    availabilityBtn.addEventListener('click', () => {
+      // Highlight current status when opening
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const availBtn   = document.getElementById('set-available');
+      const unavailBtn = document.getElementById('set-unavailable');
+      if (availBtn && unavailBtn) {
+        availBtn.classList.toggle('selected', user.is_available === true);
+        unavailBtn.classList.toggle('selected', user.is_available === false);
+      }
+      const msg = document.getElementById('availability-message');
+      if (msg) msg.className = 'modal-feedback hidden';
+      openModal('availability-modal');
+    });
+  }
 
+  document.getElementById('set-available')?.addEventListener('click', () => updateAvailability(true));
+  document.getElementById('set-unavailable')?.addEventListener('click', () => updateAvailability(false));
+  document.getElementById('close-availability-modal')?.addEventListener('click', () => closeModal('availability-modal'));
+
+  // Edit profile modal
+  const editBtn = document.querySelector('button.btn-secondary[onclick], button.btn-secondary');
+  const allSecondaryBtns = document.querySelectorAll('.btn-secondary');
+  allSecondaryBtns.forEach(btn => {
+    if (btn.textContent.trim() === 'Edit Profile') {
+      btn.addEventListener('click', openEditModal);
+    }
+  });
+
+  document.getElementById('save-profile')?.addEventListener('click', saveProfileEdits);
+  document.getElementById('close-edit-modal')?.addEventListener('click', () => closeModal('edit-modal'));
+
+  // Close modals when clicking the backdrop
+  document.getElementById('availability-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'availability-modal') closeModal('availability-modal');
+  });
+  document.getElementById('edit-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'edit-modal') closeModal('edit-modal');
+  });
   // Manual location search for find-donor page
   const manualLocationBtn = document.getElementById('manual-location-btn');
   if (manualLocationBtn) manualLocationBtn.addEventListener('click', handleManualLocationSearch);

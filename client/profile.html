@@ -76,6 +76,10 @@
                     <span class="info-label">Address:</span>
                     <span class="info-value" id="profile-address">123 Main Street, City, State 12345</span>
                   </div>
+                  <div class="info-row md:col-span-2">
+                    <span class="info-label">Availability:</span>
+                    <span id="availability-badge" class="avail-badge avail-yes">Available</span>
+                  </div>
                 </div>
 
                 <div class="mt-6 pt-6 border-t border-gray-200">
@@ -174,6 +178,62 @@
         </div>
       </div>
     </footer>
+  <!-- Availability Modal -->
+<div id="availability-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <h3 class="modal-title">Update Availability</h3>
+    <p class="modal-subtitle">Let donors know if you're currently available to donate.</p>
+
+    <div class="availability-options">
+      <button id="set-available" class="avail-option-btn avail-option-yes">
+        <span class="avail-option-dot" style="background:#22c55e;"></span>
+        Available
+      </button>
+      <button id="set-unavailable" class="avail-option-btn avail-option-no">
+        <span class="avail-option-dot" style="background:#f97316;"></span>
+        Unavailable
+      </button>
+    </div>
+
+    <div id="availability-message" class="modal-feedback hidden"></div>
+
+    <div class="modal-actions">
+      <button id="close-availability-modal" class="btn-secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="edit-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <h3 class="modal-title">Edit Profile</h3>
+    <p class="modal-subtitle">Update your personal information.</p>
+
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input id="edit-name" type="text" class="form-input" placeholder="Full name" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input id="edit-email" type="email" class="form-input" placeholder="Email address" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone</label>
+      <input id="edit-phone" type="tel" class="form-input" placeholder="Phone number" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <input id="edit-address" type="text" class="form-input" placeholder="Full address" />
+    </div>
+
+    <div id="edit-message" class="modal-feedback hidden"></div>
+
+    <div class="modal-actions">
+      <button id="close-edit-modal" class="btn-secondary">Cancel</button>
+      <button id="save-profile" class="btn-primary">Save Changes</button>
+    </div>
+  </div>
+</div>
   </div>
 
   <script src="main.js"></script>
